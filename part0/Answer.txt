@@ -1,0 +1,28 @@
+Part.4:
+
+Effect : Client Writes and submits new note
+
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/notes
+server-->browser: HTML-code
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/main.css
+server-->browser: main.css
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/main.js
+server-->browser: main.js
+browser--> Parses and runs the JS. Page finishes loading.
+browser-->responds to text input, firing events linked to input tag.
+browser-->Captures value on submit and sends to server
+server-->responds http code after validating response message.
+browser-->refreshes page to display http response
+
+Part.5:
+
+SPA Version of Notes App
+
+Essentially the same steps except refreshing of browser is not needed to display newest message 
+
+Part.6:
+
+browser-> User writes message into input field.
+browser->captures message on submit and adds to corresponding state property.
+browser->rerenders component displaying the message state property.
+
