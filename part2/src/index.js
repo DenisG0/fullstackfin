@@ -1,76 +1,66 @@
-import React, { useState } from 'react'
 import ReactDOM from 'react-dom'
-
-const Numberform = ({persons,setPersons}) => {
-
-  const [ newName, setNewName ] = useState('')
-  const [ newNumber, setNewNumber ] = useState('')
-
-  
-  const submitNumber = (event) => {
-    event.preventDefault();
-    //Filter for same names
-    setPersons(persons.concat({name:newName,number:newNumber}))
-    setNewName("");
-    setNewNumber("");
-  }
-
-  const checkName = (event) => {
-    let found = persons.filter((person)=>event.target.value == person.name)
-    console.log("FOUND:",found)
-    if(found.length>0){
-      alert(`${event.target.value} already exists in our system`)
-    }else{
-      setNewName(event.target.value);
-    }
-  }
-
-  return (
-    <form onSubmit={submitNumber}>
-      <div>
-        name: <input onChange={checkName} value={newName}/>
-      </div>
-      <div>
-        Number: <input onChange={(event)=>setNewNumber(event.target.value)} value={newNumber}/>
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  )
-}
-
-const Numbers = (props) => {
-
-  return (
-    <ul>
-    {props.people.map((ele)=><li>{ele.name} {ele.number}</li>)}
-    </ul>
-  )
-}
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+// import Note from './components/Note'
 
 const App = () => {
+  const [country, setCountry] = useState([])
+  const [selectedCountry, selectCountry] = useState([])
+  const [showAll, setShowAll] = useState(true)
 
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456' },
-    { name: 'Ada Lovelace', number: '39-44-5323523' },
-    { name: 'Dan Abramov', number: '12-43-234345' },
-    { name: 'Mary Poppendieck', number: '39-23-6423122' }
-  ])
+  const hook = () => {
+    console.log('effect')
+    axios
+      .get('https://restcountries.eu/rest/v2/all')
+      .then(response => {
+        console.log('promise fulfilled')
+        setCountry(response.data)
+      })
+  }
+  
+  useEffect(hook, [])
 
 
+  const searchCountry = (event) => {
+      const searchString = event.target.value;
+      selectCountry(country.filter((x)=>x.name.includes(searchString)));
+      console.log("Search String", searchString, "Found", selectedCountry )
+
+  }
+
+  // ...
   return (
     <div>
-      <h2>Phonebook</h2>
-      <hr/>
-      <Numberform persons={persons} setPersons={setPersons}/>
-      <h2>Numbers</h2>
-      <Numbers people={persons}/>
+      <h1>Country Finder</h1>
+      <p>Find Countries</p><input  onChange={searchCountry}></input>
+      <Chosencountry selectedCountry={selectedCountry}/>
     </div>
   )
 }
 
-ReactDOM.render(
-  <App />,
-  document.getElementById('root')
-)
+const Chosencountry = ({selectedCountry}) => {
+    if(selectedCountry.length>10){
+      return(
+        <p> Too many Countries to List</p>
+      )
+    }else if(selectedCountry.length>1){
+      return selectedCountry.map((country)=><p>{country.name}</p>)
+    }else if(selectedCountry.length === 1){
+      let country = selectedCountry[0]
+      return(
+        <div>
+          <h2>{country.name}</h2>
+          <p>Capital: {country.capital}</p>
+          <p>Population: {country.population}</p>
+          <h3>Languages</h3>
+          {country.languages.map((ele)=><p>{ele.name}</p>)}
+        </div>
+      )
+    }else{
+      return(
+        <p>Type in the to Search!</p>
+      )
+    }
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))
