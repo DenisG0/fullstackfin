@@ -1,27 +1,28 @@
-const express = require('express')
-const morgan = require('morgan')
-const cors = require('cors')
-const mongoose = require('mongoose')
-mongoose.set('useFindAndModify', false)
-require('dotenv').config()
-const Person = require('./models/person')
+const express = require("express")
+const morgan = require("morgan")
+const cors = require("cors")
+const mongoose = require("mongoose")
+mongoose.set("useFindAndModify", false)
+require("dotenv").config()
+const Person = require("./models/person")
 
 const app = express()
 app.use(express.json())
 app.use(cors())
 
 
-morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
-app.use(express.static('build'))
+morgan.token("body", function (req, res) { return JSON.stringify(req.body) })
+app.use(express.static("build"))
 
-app.use(morgan(':method :url :response-time :body'))
+app.use(morgan(":method :url :response-time :body"))
 
 
-app.get('/api/persons', (req, res) => {
+app.get("/api/persons", (req, res,next) => {
   // res.json(persons)
   Person.find({}).then(result => {
-    res.json(result.map(x=>x.toJSON()))
+    res.json(result.map(x => x.toJSON()))
   })
+    .catch(error => next(error))
 })
 
 // const generateId = () => {
@@ -31,38 +32,37 @@ app.get('/api/persons', (req, res) => {
 //   return maxId + 1
 // }
 
-app.post('/api/persons', (request, response) => {
+app.post("/api/persons", (request, response, next) => {
 
   const body = request.body
 
   if (!body.number) {
-    return response.status(400).json({ 
-      error: 'number is missing' 
+    return response.status(400).json({
+      error: "number is missing"
     })
   }
   if (!body.name) {
-    return response.status(400).json({ 
-      error: 'name is missing' 
+    return response.status(400).json({
+      error: "name is missing"
     })
   }
-  // if(persons.find((person)=>person.name===body.name)){
-  //   return response.status(400).json({ 
-  //     error: 'name must be unique' 
-  //   })
-  // } 
 
   const person = new Person({
     name: body.name,
     number: body.number,
-    // id: generateId(),
   })
 
-  person.save().then(saved =>{
-    response.json(saved.toJSON())
-  })
+  person.save()
+    .then(saved => {
+      return saved.toJSON()
+    })
+    .then(formatedData => {
+      response.json(formatedData)
+    })
+    .catch(error => next(error))
 })
 
-app.put('/api/persons/:id', (request, response, next) => {
+app.put("/api/persons/:id", (request, response, next) => {
   const body = request.body
 
   const person = {
@@ -72,26 +72,29 @@ app.put('/api/persons/:id', (request, response, next) => {
 
   Person.findByIdAndUpdate(request.params.id, person, { new: true })
     .then(updatedPerson => {
-      response.json(updatedPerson.toJSON())
+      return updatedPerson.toJSON()
+    })
+    .then(formatedData => {
+      return response.json(formatedData)
     })
     .catch(error => next(error))
 })
 
-app.get('/info', (request,response) => {
-  const peopleAmount = persons.length;
+app.get("/info", (request,response) => {
+  const peopleAmount = persons.length
   response.send(`<p>Phonebook has info for ${peopleAmount} people </p> <p> ${new Date()} </p>`)
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   const id = Number(request.params.id)
   Person.findById(id)
-    .then(person=>{
-    response.json(person.toJSON())
+    .then(person => {
+      response.json(person.toJSON())
     })
     .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
       response.status(204).end()
@@ -100,16 +103,17 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
+const unknownEndpoint = (request, response, next) => {
+  response.status(404).send({ error: "unknown endpoint" })
 }
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
-  if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
-  } 
-
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" })
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message })
+  }
   next(error)
 }
 app.use(unknownEndpoint)

@@ -16,6 +16,7 @@ const App = () => {
       .then(initialPersons => {
         setPersons(initialPersons)
       })
+      // .catch(error => next(error)) 
   }, [])
 
   const addPerson = (event) => {
@@ -43,6 +44,7 @@ const App = () => {
             setNewPerson('')
             setNewNumber('')
           })
+          // .catch(error => next(error)) 
       } 
     }else{
       const PersonObject = {
@@ -57,6 +59,7 @@ const App = () => {
           setNewPerson('')
           setNewNumber('')
         })
+        // .catch(error => next(error)) 
     }
   }
 
