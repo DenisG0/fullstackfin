@@ -10,7 +10,6 @@ const totalLikes = (blogs) => {
 
 const favoriteBlog = (blogs) => {
   return blogs.reduce((a,b) => {
-    console.log(a, b)
     return a.likes>b.likes?a:b
   },[])
 }

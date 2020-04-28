@@ -46,6 +46,5 @@ test('Most Likes', () => {
 
 
   const result = listHelper.mostLikes(blogs)
-  console.log("Result", result)
   expect(result).toEqual({ author: 'Edsger W. Dijkstra', likes: 17 })
 })
