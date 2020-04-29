@@ -13,12 +13,15 @@ blogRouter.get('/:id', async(request, response) => {
 
 blogRouter.post('/', async (request, response) => {
   const body = request.body
+  if(body.title.length<1||body.author.length<1){
+    response.status(400).end()
+  }
 
   const blog = new Blog({
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes
+    likes: body.likes || 0
   })
   const savedBlog = await blog.save()
   response.json(savedBlog.toJSON())

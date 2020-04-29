@@ -3,7 +3,7 @@ Content-Type:application/json
 
 {
     "title":"The Art of War",
-    "author":"Sun-Tzu",
+    "author":"",
     "url":"artofwar.com",
     "likes":"31"
 }

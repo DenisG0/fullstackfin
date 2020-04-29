@@ -15,77 +15,102 @@ beforeEach(async () => {
   await Promise.all(promiseArray)
   console.log('Done')
 })
+describe('Getting Blogs', () => {
+  test('blogs are returned as json', async () => {
+    await api
+      .get('/api/blog')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
 
-test('blogs are returned as json', async () => {
-  await api
-    .get('/api/blog')
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
+  test('All blogs are returned', async () => {
+    const response = await api.get('/api/blog')
+
+    expect(response.body).toHaveLength(helper.initialBlogs.length)
+  })
+
+  test('the first blog is the art of war', async () => {
+    const response = await api.get('/api/blog')
+
+    expect(response.body[0].title).toBe('Range')
+  })
 })
 
-test('All blogs are returned', async () => {
-  const response = await api.get('/api/blog')
-
-  expect(response.body).toHaveLength(helper.initialBlogs.length)
+describe('Individual blogs can be altered',() => {
+  test('a valid blog can be added', async () => {
+    const newBlog = {
+      "title":"Inspired",
+      "author":"Martha Cagan",
+      "url":"Inspired.com",
+      "likes":"34"
+    }
+    await api
+      .post('/api/blog')
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+    const response = await helper.blogsInDb()
+    // console.log("Response", response)
+    // const titles = response.body.map(r => r.content)
+    expect(response).toHaveLength(helper.initialBlogs.length + 1)
+  })
+  test('a specific blog can be viewed', async () => {
+    const blogAtStart = await helper.blogsInDb()
+    const blogToView = blogAtStart[0]
+    const resultBlog = await api
+      .get(`/api/blog/${blogToView.id}`)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+    expect(resultBlog.body).toEqual(blogToView)
+  })
+  test('a blog can be deleted', async () => {
+    const blogAtStart = await helper.blogsInDb()
+    const blogToDelete = blogAtStart[0]
+    await api
+      .delete(`/api/blog/${blogToDelete.id}`)
+      .expect(204)
+    const blogAtEnd = await helper.blogsInDb()
+    expect(blogAtEnd).toHaveLength(
+      helper.initialBlogs.length - 1
+    )
+    const titles = blogAtEnd.map(r => r.title)
+    expect(titles).not.toContain(blogToDelete.title)
+  })
 })
 
-test('the first blog is the art of war', async () => {
-  const response = await api.get('/api/blog')
+describe('Wrong blogs will be rejected', async () => {
+  test('a blog always has zero likes', async () => {
+    const newBlog = {
+      "title":"Inspired",
+      "author":"Martha Cagan",
+      "url":"Inspired.com"
+    }
 
-  expect(response.body[0].title).toBe('The Art of War')
-})
+    await api
+      .post('/api/blog')
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
 
-test('a valid note can be added', async () => {
-  const newBlog = {
-    "title":"Inspired",
-    "author":"Martha Cagan",
-    "url":"Inspired.com",
-    "likes":"34"
-  }
+    const response = await helper.blogsInDb()
+    // console.log("Response", response)
+    const recentBlog = response.filter(r => r.title == "Inspired")
 
-  await api
-    .post('/api/blog')
-    .send(newBlog)
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
+    expect(recentBlog[0].likes).toBe(0)
+  })
 
-  const response = await helper.blogsInDb()
-  // console.log("Response", response)
-  // const titles = response.body.map(r => r.content)
+  test('empty title will return 400', async () => {
+    const newBlog = {
+      "title":"Inspired",
+      "author":"",
+      "url":"Inspired.com"
+    }
 
-  expect(response).toHaveLength(helper.initialBlogs.length + 1)
-})
-
-test('a specific blog can be viewed', async () => {
-  const blogAtStart = await helper.blogsInDb()
-
-  const blogToView = blogAtStart[0]
-
-  const resultBlog = await api
-    .get(`/api/blog/${blogToView.id}`)
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
-
-  expect(resultBlog.body).toEqual(blogToView)
-})
-
-test('a note can be deleted', async () => {
-  const blogAtStart = await helper.blogsInDb()
-  const blogToDelete = blogAtStart[0]
-
-  await api
-    .delete(`/api/blog/${blogToDelete.id}`)
-    .expect(204)
-
-  const blogAtEnd = await helper.blogsInDb()
-
-  expect(blogAtEnd).toHaveLength(
-    helper.initialBlogs.length - 1
-  )
-
-  const titles = blogAtEnd.map(r => r.title)
-
-  expect(titles).not.toContain(blogToDelete.title)
+    await api
+      .post('/api/blog')
+      .send(newBlog)
+      .expect(400)
+  })
 })
 
 afterAll(() => {
