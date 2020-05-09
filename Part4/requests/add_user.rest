@@ -1,0 +1,10 @@
+POST http://localhost:3000/api/user
+Content-Type:application/json
+
+{
+  "username": "petergriffin",
+  "name": "Peter Griffin",
+  "password": "touchmybody"
+}
+
+# DELETE http://localhost:3001/api/persons/5e966bf351e77a81e0e953e1
